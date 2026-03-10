@@ -12,7 +12,6 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-check.js";
         import { 
             getFirestore, 
             collection, 
@@ -62,21 +61,18 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // ── APP CHECK (reCAPTCHA v3) ──
-        // Ensures only your domain can call Firestore/Auth
-        // Replace RECAPTCHA_SITE_KEY with your key from:
-        // Firebase Console → App Check → Apps → Register → reCAPTCHA v3
-        // Then get your site key from: console.cloud.google.com → reCAPTCHA
-        if (typeof ReCaptchaV3Provider !== 'undefined') {
+        // ── APP CHECK (reCAPTCHA v3) ── loaded dynamically so 404 won't break app
+        import("https://www.gstatic.com/firebasejs/12.7.0/firebase-app-check.js").then(({ initializeAppCheck, ReCaptchaV3Provider }) => {
             try {
                 initializeAppCheck(app, {
                     provider: new ReCaptchaV3Provider('6Le0V4UsAAAAAPXzLAEOBP0wKniv9hBKfoDjWYxv'),
                     isTokenAutoRefreshEnabled: true
                 });
+                console.log('App Check initialized');
             } catch(e) {
                 console.warn('App Check init failed:', e.message);
             }
-        }
+        }).catch(e => console.warn('App Check module not available:', e.message));
         
         // Make available globally
         window.db = db;
